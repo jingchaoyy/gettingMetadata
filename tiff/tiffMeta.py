@@ -82,27 +82,29 @@ def bandStats(tif):
     return bands
 
 
-filepath = r"/Users/YJccccc/Desktop/DonglianSun_Project/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic_geotiff/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic.tif"
-
-# Open the file:
-raster = gdal.Open(filepath)
-
-meta = raster.GetMetadata()
-print('Basic Info:', meta)
-
-ext = GetExtent(raster)
-dimensions = ext[0], ext[1]
-extent = ext[2]
-origin = ext[2][0]
-pixelSize = ext[3],ext[4]
-
-print('\nExtent:', extent)
-print('\nDimensions:(x,y)', dimensions)
-print('\nOrigion:', origin)
-print('\npixel Size:(x,y)', pixelSize)
-
-bandInfo = bandStats(raster)
-print('\nCompression')
-for b in bandInfo:
-    print('BAND', bandInfo.index(b) + 1, "[ STATS ] =  Minimum=%.3f, Maximum=%.3f, Mean=%.3f, StdDev=%.3f" % ( \
-        b[0], b[1], b[2], b[3]))
+# filepath = r"/Users/YJccccc/Desktop/DonglianSun_Project/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic_geotiff/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic.tif"
+#
+# filepath = ''
+#
+# # Open the file:
+# raster = gdal.Open(filepath)
+#
+# meta = raster.GetMetadata()
+# # print('Basic Info:', meta)
+#
+# ext = GetExtent(raster)
+# dimensions = ext[0], ext[1]
+# extent = ext[2]
+# origin = ext[2][0]
+# pixelSize = ext[3],ext[4]
+#
+# # print('\nExtent:', extent)
+# # print('\nDimensions:(x,y)', dimensions)
+# # print('\nOrigion:', origin)
+# # print('\npixel Size:(x,y)', pixelSize)
+#
+# bandInfo = bandStats(raster)
+# print('\nCompression')
+# # for b in bandInfo:
+# #     print('BAND', bandInfo.index(b) + 1, "[ STATS ] =  Minimum=%.3f, Maximum=%.3f, Mean=%.3f, StdDev=%.3f" % ( \
+# #         b[0], b[1], b[2], b[3]))
