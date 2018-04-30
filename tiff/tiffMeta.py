@@ -4,10 +4,10 @@ Created on 4/30/18
 @author: YJccccc
 """
 
-from osgeo import gdal,ogr,osr
+from osgeo import gdal, ogr, osr
 
 
-def GetExtent(gt,cols,rows):
+def GetExtent(tif):
     ''' Return list of corner coordinates from a geotransform
 
         @type gt:   C{tuple/list}
@@ -19,20 +19,29 @@ def GetExtent(gt,cols,rows):
         @rtype:    C{[float,...,float]}
         @return:   coordinates of each corner
     '''
-    ext=[]
-    xarr=[0,cols]
-    yarr=[0,rows]
+
+    gt = tif.GetGeoTransform()
+    cols = tif.RasterXSize
+    rows = tif.RasterYSize
+
+    pixelSizeX = gt[1]
+    pixelSizeY = -gt[5]
+
+    ext = []
+    xarr = [0, cols]
+    yarr = [0, rows]
 
     for px in xarr:
         for py in yarr:
-            x=gt[0]+(px*gt[1])+(py*gt[2])
-            y=gt[3]+(px*gt[4])+(py*gt[5])
-            ext.append([x,y])
+            x = gt[0] + (px * gt[1]) + (py * gt[2])
+            y = gt[3] + (px * gt[4]) + (py * gt[5])
+            ext.append([x, y])
             # print (x,y)
         yarr.reverse()
-    return ext
+    return cols, rows, ext,pixelSizeX,pixelSizeY
 
-def ReprojectCoords(coords,src_srs,tgt_srs):
+
+def ReprojectCoords(coords, src_srs, tgt_srs):
     ''' Reproject a list of x,y coordinates.
 
         @type geom:     C{tuple/list}
@@ -44,13 +53,33 @@ def ReprojectCoords(coords,src_srs,tgt_srs):
         @rtype:         C{tuple/list}
         @return:        List of transformed [[x,y],...[x,y]] coordinates
     '''
-    trans_coords=[]
-    transform = osr.CoordinateTransformation( src_srs, tgt_srs)
-    for x,y in coords:
-        x,y,z = transform.TransformPoint(x,y)
-        trans_coords.append([x,y])
+    trans_coords = []
+    transform = osr.CoordinateTransformation(src_srs, tgt_srs)
+    for x, y in coords:
+        x, y, z = transform.TransformPoint(x, y)
+        trans_coords.append([x, y])
     return trans_coords
 
+
+def bandStats(tif):
+    bands = []
+    for band in range(tif.RasterCount):
+        band += 1
+        # print("[ GETTING BAND ]: ", band)
+
+        srcband = tif.GetRasterBand(band)
+        if srcband is None:
+            continue
+
+        stats = srcband.GetStatistics(True, True)
+        if stats is None:
+            continue
+
+        info = stats[0], stats[1], stats[2], stats[3]
+        bands.append(info)
+        # print("[ STATS ] =  Minimum=%.3f, Maximum=%.3f, Mean=%.3f, StdDev=%.3f" % ( \
+        #     stats[0], stats[1], stats[2], stats[3]))
+    return bands
 
 
 filepath = r"/Users/YJccccc/Desktop/DonglianSun_Project/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic_geotiff/SNPP_VIIRS_375m_floodmap_1826_Sep01_2017_Geographic.tif"
@@ -59,11 +88,21 @@ filepath = r"/Users/YJccccc/Desktop/DonglianSun_Project/SNPP_VIIRS_375m_floodmap
 raster = gdal.Open(filepath)
 
 meta = raster.GetMetadata()
+print('Basic Info:', meta)
 
-gt=raster.GetGeoTransform()
-cols = raster.RasterXSize
-rows = raster.RasterYSize
-ext=GetExtent(gt,cols,rows)
-print('Extent:', ext)
+ext = GetExtent(raster)
+dimensions = ext[0], ext[1]
+extent = ext[2]
+origin = ext[2][0]
+pixelSize = ext[3],ext[4]
 
+print('\nExtent:', extent)
+print('\nDimensions:(x,y)', dimensions)
+print('\nOrigion:', origin)
+print('\npixel Size:(x,y)', pixelSize)
 
+bandInfo = bandStats(raster)
+print('\nCompression')
+for b in bandInfo:
+    print('BAND', bandInfo.index(b) + 1, "[ STATS ] =  Minimum=%.3f, Maximum=%.3f, Mean=%.3f, StdDev=%.3f" % ( \
+        b[0], b[1], b[2], b[3]))
